@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="PluginClassificadorFiscal" default="all" basedir=".">
+
+    <description>
+    	Classificador Fiscal build file
+    </description>
+
+	<!-- Versão deste módulo -->
+	<property name="version" value="1.0"/>
+
+	<!-- Nome deste componente utilizado para nomear arquivos -->
+	<property name="compname" value="classificador"/>
+
+	<!-- Nome deste componente apresentável para o usuário -->
+	<property name="fullname" value="Teste Plugin: ClassificaForm"/>
+
+	<!-- Classe que representa o ponto de entrada para este plugin -->
+	<property name="plugin" value="org.classifica.plug.PluginClassificadorFiscal"/>
+
+	<!-- Arquivo template JNLP necessário para publicação do plugin no servidor -->
+	<property name="jnlp" value="${compname}.jnlp"/>
+
+	<property name="src.pkg" value="org"/>
+
+	<!-- Inclui outras definições comuns -->
+	
+	<import file="../ContAgilModel/build_utils.xml" as="commons"/>
+
+	<target name="all" depends="commons.compile.and.pack" />
+
+</project>
