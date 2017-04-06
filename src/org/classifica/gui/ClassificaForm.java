@@ -195,6 +195,16 @@ public class ClassificaForm extends JFrame {
 		rdbTexto.setSelected(true);
 		rdbTexto.setBounds(331, 95, 109, 23);
 		panelA.add(rdbTexto);
+		
+		JButton btnParametros = new JButton("Ajustar par\u00E2metros");
+		btnParametros.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ajustaParametros();
+			}
+
+		});
+		btnParametros.setBounds(676, 95, 160, 23);
+		panelA.add(btnParametros);
 		btnPesquisaPalavrasNCM.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				vetorizador.clearTiposAtivos();
@@ -231,17 +241,30 @@ public class ClassificaForm extends JFrame {
 			private static final long serialVersionUID = 1L;
 			public String getToolTipText(MouseEvent e) {
 				String tip = null;
+				String htmltip = "<html>";
 				java.awt.Point p = e.getPoint();
 				int rowIndex = rowAtPoint(p);
 				int colIndex = columnAtPoint(p);
-
 				try {
 					tip = getValueAt(rowIndex, colIndex).toString();
+					int numRows = (tip.length() % 150) + 1;
+					for (int r=0; r<=numRows; r+=1){
+						int beginIndex = r * 150;
+						int endIndex = (r+1) * 150;
+						if (endIndex > tip.length()){
+							endIndex = tip.length();
+						}
+						htmltip = htmltip + tip.substring(beginIndex, endIndex) + "<br>";
+					}
+					htmltip = htmltip + "</html>";
+
 				} catch (RuntimeException e1) {
+					//e1.printStackTrace();
 					//catch null pointer exception if mouse is over an empty line
 				}
+//				System.out.println(htmltip);
 
-				return tip;
+				return htmltip;
 			}
 		};
 		tblSugestoes.setModel(new ModelSugestoes());
@@ -544,6 +567,12 @@ public class ClassificaForm extends JFrame {
 		model.addLista(vetorizador.getListaNCM());
 
 	}
+	private void ajustaParametros() {
+		ParametrosBM25Form frm = new ParametrosBM25Form();
+		frm.setVetorizador(vetorizador);
+		frm.setVisible(true);
+	}
+
 }
 
 

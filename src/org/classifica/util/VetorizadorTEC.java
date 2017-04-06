@@ -26,12 +26,18 @@ public class VetorizadorTEC {
 	private ArrayList<ArrayList<Integer>> vetoresTECBigramaindex; // Vetores dos itens da listaTECResumo
 	private ArrayList<ArrayList<Integer>> vetoresTECBigramacount; // Vetores dos itens da listaTECResumo
 	private ArrayList<Float[]> TECsPontos;
+	private ArrayList<String[]> TECsPontosDescricao;
 	public enum Tipo {TEXTO, STEM, BIGRAMA};
 	private Set<Tipo> tiposAtivos;
 	private ArrayList<ArrayList<Integer>> vetoresTECstemindex;
 	private ArrayList<ArrayList<Integer>> vetoresTECstemcount;
 
+    //Parâmetros BM25+
+	public double _delta = 1.0;
+	public double _k = 1.2;
+	public double _b = 0.75;
 
+	
 	public ArrayList<Float[]> getTECsPontos() {
 		return TECsPontos;
 	}
@@ -298,17 +304,17 @@ public class VetorizadorTEC {
 		}
 	}
 
-	public String pontuaTexto(String ptexto) {
-		return pontuaTexto(ptexto, false);
+	public double TF_IDF(Double countPalavraItemTEC, short psum, Integer pquantidadeTECs, short countPalavraVocab,
+			Integer pnumeroPalavrasLinhaTEC, double pavgLengthlistaTECResumo) {
+		/// Pontuação padrão BM25+
+	   double tf =  countPalavraItemTEC/psum;
+	   tf = ( tf * ( _k + 1 ) ) / (tf + (_k * ((1 - _b) + ( _b * (pnumeroPalavrasLinhaTEC / pavgLengthlistaTECResumo)))));
+	   double idf = Math.log( (pquantidadeTECs - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5));
+	   return idf * (tf + _delta);
 	}
 
-	public double TF_IDF(Integer pcountPalavraItemTEC, Integer psum, Integer pquantidadeTECs, Integer pcountPalavraVocab,
-			Integer pnumeroPalavrasLinhaTEC, double pavgLengthlistaTECResumo) {
-	   double tf =  pcountPalavraItemTEC/psum;
-	   double k = 1.2;
-	   tf = ( tf * ( k + 1 ) ) / (tf + (k * (0.25 + (0.75 * (pnumeroPalavrasLinhaTEC / pavgLengthlistaTECResumo)))));
-	   double idf = Math.log( (pquantidadeTECs - pcountPalavraVocab + 0.5) / ( pcountPalavraVocab + 0.5));
-	   return tf * idf;
+	public String pontuaTexto(String ptexto) {
+		return pontuaTexto(ptexto, false);
 	}
 
 	public String pontuaTexto(String ptexto, boolean ponderado) {
@@ -316,6 +322,7 @@ public class VetorizadorTEC {
 		ptexto = removerAcentos(ptexto);
 		String[] listadepalavras = ptexto.split(" ");
 		TECsPontos = new ArrayList<Float[]>();
+		TECsPontosDescricao = new ArrayList<String[]>();
 		String textopontuado = ptexto+"\n";
 		ArrayList<Integer> indicesVocab = new ArrayList<Integer>();
 		ArrayList<Integer> indicesVocabstem = new ArrayList<Integer>();
@@ -369,11 +376,12 @@ public class VetorizadorTEC {
 			ArrayList<Integer> vetorLinhaTECBigramaindex = vetoresTECBigramaindex.get(r);
 			ArrayList<Integer> vetorLinhaTECBigramacount = vetoresTECBigramacount.get(r);
 			Float[] linha = {(float) 0.0,(float) 0.0};
-			double k = 1.2;
+			String[] linhadescricao = {"", ""};
 			double avgLengthlistaTECResumo = numeroPalavrasTECResumo / listaTECResumo.size();
 			String linhaTEC = listaTECResumo.get(r);
 			String[] arrayLinhaTEC = linhaTEC.split(" ");  
 			Integer numeroPalavrasLinhaTEC = arrayLinhaTEC.length; 
+			String linhadescricaopontos = "";
 			if (tiposAtivos.contains(Tipo.TEXTO)){
 				for (int s=0;s<indicesVocab.size();s++){
 					short countPalavraVocab = vetorVocab[indicesVocab.get(s)];
@@ -382,17 +390,16 @@ public class VetorizadorTEC {
 						Double countPalavraItemTEC = (double) vetorLinhaTECcount.get(indexLinha);
 						Double valorPalavraItemTEC = (double) 0.0;
 						if(ponderado){
-							Integer sum = 0;
+							short sum = 0;
 							for (Integer i : vetorLinhaTECcount)
 								sum += i;
-							double tf =  countPalavraItemTEC/sum;
-							tf = ( tf * ( k + 1 ) ) / (tf + (k * (0.25 + (0.75 * (numeroPalavrasLinhaTEC / avgLengthlistaTECResumo)))));
-							double idf = Math.log( (listaTECResumo.size() - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5));
-							valorPalavraItemTEC = tf * idf;
+							valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTECResumo.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTECResumo);
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						totaltec = totaltec + valorPalavraItemTEC.floatValue();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocab.get(indicesVocab.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
+						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
 				}
 			}
@@ -407,14 +414,13 @@ public class VetorizadorTEC {
 							short sum = 0;
 							for (Integer i : vetorLinhaTECstemcount)
 								sum += i;
-							double tf =  countPalavraItemTEC/sum;
-							tf = ( tf * ( k + 1 ) ) / (tf + (k * (0.25 + (0.75 * (numeroPalavrasLinhaTEC / avgLengthlistaTECResumo)))));
-							double idf = Math.log( (listaTECResumo.size() - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5));
-							valorPalavraItemTEC = tf * idf;
+							valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTECResumo.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTECResumo);
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						totaltec = totaltec + valorPalavraItemTEC.floatValue();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabstem.get(indicesVocabstem.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
+						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
 				}
 			}
@@ -429,21 +435,23 @@ public class VetorizadorTEC {
 							short sum = 0;
 							for (Integer i : vetorLinhaTECBigramacount)
 								sum += i;
-							double tf =  countPalavraItemTEC/sum;
-							tf = ( tf * ( k + 1 ) ) / (tf + (k * (0.25 + (0.75 * (numeroPalavrasLinhaTEC / avgLengthlistaTECResumo)))));
-							double idf = Math.log( (listaTECResumo.size() - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5));
-							valorPalavraItemTEC = tf * idf;
+							valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTECResumo.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTECResumo);
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						totaltec = totaltec + valorPalavraItemTEC.floatValue();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabBigrama.get(indicesVocabBigrama.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
+						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
 				}
 			}
 			if (totaltec>0){
 				linha[0] = totaltec; // Pontuação
 				linha[1] = (float) r; // Índice da linha da TEC
+				linhadescricao[0] = linhadescricaopontos;
+				linhadescricao[1] = Integer.toString(r);
 				TECsPontos.add(linha);
+				TECsPontosDescricao.add(linhadescricao);
 			}
 		}
 		Collections.sort(TECsPontos, new Comparator<Float[]>() {
