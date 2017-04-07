@@ -48,6 +48,7 @@ import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
 
 
 public class ClassificaForm extends JFrame {
@@ -97,7 +98,7 @@ public class ClassificaForm extends JFrame {
 
 	private JSplitPane splitPane3;
 	private JLabel lblNewLabel_1;
-	private JTextArea txtPontuacao;
+	private JTextArea txtExplicacao;
 
 	private JScrollPane scrollPane3;
 
@@ -217,7 +218,7 @@ public class ClassificaForm extends JFrame {
 					if (rdbBigrama.isSelected()){
 						vetorizador.addTipoAtivo(VetorizadorTEC.Tipo.BIGRAMA);
 					}
-				txtPontuacao.setText(vetorizador.pontuaTexto(txtPesquisa.getText(), chkPonderado.isSelected()));
+				txtExplicacao.setText(vetorizador.pontuaTexto(txtPesquisa.getText(), chkPonderado.isSelected()));
 				Integer index = vetorizador.getTECsPontos().size();
 				if (index>50){
 					index = 50;
@@ -267,6 +268,12 @@ public class ClassificaForm extends JFrame {
 				return htmltip;
 			}
 		};
+		tblSugestoes.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				selecionaExplicacaoTEC();
+			}
+		});
 		tblSugestoes.setModel(new ModelSugestoes());
 		tblSugestoes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblSugestoes.getColumnModel().getColumn(0).setPreferredWidth(20);
@@ -384,11 +391,11 @@ public class ClassificaForm extends JFrame {
 		splitPane3.setRightComponent(scrollPane3);
 
 
-		txtPontuacao = new JTextArea();
-		txtPontuacao.setEditable(false);
-		txtPontuacao.setLineWrap(true);
-		txtPontuacao.setWrapStyleWord(true);
-		scrollPane3.setViewportView(txtPontuacao);
+		txtExplicacao = new JTextArea();
+		txtExplicacao.setEditable(false);
+		txtExplicacao.setLineWrap(true);
+		txtExplicacao.setWrapStyleWord(true);
+		scrollPane3.setViewportView(txtExplicacao);
 
 
 		contentPane.addComponentListener(new ComponentAdapter(){
@@ -407,6 +414,7 @@ public class ClassificaForm extends JFrame {
 		ClassificaSwingWorker sw = new ClassificaSwingWorker();
 		sw.execute();
 	}
+
 
 
 
@@ -571,6 +579,23 @@ public class ClassificaForm extends JFrame {
 		ParametrosBM25Form frm = new ParametrosBM25Form();
 		frm.setVetorizador(vetorizador);
 		frm.setVisible(true);
+	}
+	protected void selecionaExplicacaoTEC() {
+		int index = tblSugestoes.getSelectedRow();
+		ModelSugestoes model = (ModelSugestoes) tblSugestoes.getModel();
+		if (index > 0){
+			String codigo = model.getValueAt(index, 1);
+			codigo = codigo.substring(0, 11);
+			ArrayList<String[]> lista = vetorizador.getTECsPontosDescricao();
+			for (String[] linha:lista){
+				//System.out.println(linha[1]+':'+codigo);
+				if(codigo.equals(linha[1])){
+					txtExplicacao.append(linha[0]);
+					break;
+				}
+			}
+		}
+
 	}
 
 }

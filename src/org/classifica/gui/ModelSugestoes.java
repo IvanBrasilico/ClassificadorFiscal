@@ -38,7 +38,7 @@ public class ModelSugestoes extends AbstractTableModel {
 	}
 
 	@Override
-	public Object getValueAt(int rowIndex, int columnIndex) {
+	public String getValueAt(int rowIndex, int columnIndex) {
 		// TODO Auto-generated method stub
 		return linhas.get(rowIndex)[columnIndex];
 	}

@@ -27,6 +27,12 @@ public class VetorizadorTEC {
 	private ArrayList<ArrayList<Integer>> vetoresTECBigramacount; // Vetores dos itens da listaTECResumo
 	private ArrayList<Float[]> TECsPontos;
 	private ArrayList<String[]> TECsPontosDescricao;
+	public ArrayList<String[]> getTECsPontosDescricao() {
+		return TECsPontosDescricao;
+	}
+	public void setTECsPontosDescricao(ArrayList<String[]> tECsPontosDescricao) {
+		TECsPontosDescricao = tECsPontosDescricao;
+	}
 	public enum Tipo {TEXTO, STEM, BIGRAMA};
 	private Set<Tipo> tiposAtivos;
 	private ArrayList<ArrayList<Integer>> vetoresTECstemindex;
@@ -397,7 +403,7 @@ public class VetorizadorTEC {
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocab.get(indicesVocab.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocab.get(indicesVocab.get(s)) + " Pontos:" + String.format("%.4f" , valorPalavraItemTEC);
 						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
 						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
@@ -418,7 +424,7 @@ public class VetorizadorTEC {
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabstem.get(indicesVocabstem.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabstem.get(indicesVocabstem.get(s)) + " Pontos:" + String.format("%.4f" , valorPalavraItemTEC);
 						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
 						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
@@ -439,7 +445,7 @@ public class VetorizadorTEC {
 						} else {
 							valorPalavraItemTEC = countPalavraItemTEC;
 						}
-						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabBigrama.get(indicesVocabBigrama.get(s)) + " Pontos:" + valorPalavraItemTEC.toString();
+						linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabBigrama.get(indicesVocabBigrama.get(s)) + " Pontos:" + String.format("%.4f" , valorPalavraItemTEC);
 						// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
 						totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
 					}
@@ -449,7 +455,7 @@ public class VetorizadorTEC {
 				linha[0] = totaltec; // Pontuação
 				linha[1] = (float) r; // Índice da linha da TEC
 				linhadescricao[0] = linhadescricaopontos;
-				linhadescricao[1] = Integer.toString(r);
+				linhadescricao[1] = listaTECResumo.get(r).substring(0, 11);
 				TECsPontos.add(linha);
 				TECsPontosDescricao.add(linhadescricao);
 			}
