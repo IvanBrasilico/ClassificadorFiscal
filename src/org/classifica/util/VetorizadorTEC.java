@@ -41,7 +41,7 @@ public class VetorizadorTEC {
     //Parâmetros BM25+
 	public double _delta = 1.0;
 	public double _k = 1.2;
-	public double _b = 0.75;
+	public double _b = 0.6;
 
 	
 	public ArrayList<Float[]> getTECsPontos() {

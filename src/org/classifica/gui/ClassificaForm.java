@@ -8,6 +8,8 @@ import java.awt.RenderingHints;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
@@ -48,7 +50,7 @@ import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Font;
-import java.awt.event.MouseAdapter;
+
 
 
 public class ClassificaForm extends JFrame {
@@ -185,6 +187,7 @@ public class ClassificaForm extends JFrame {
 		panelA.add(lblAguarde);
 
 		rdbStem = new JCheckBox("Stemiza\u00E7\u00E3o");
+		rdbStem.setSelected(true);
 		rdbStem.setBounds(442, 95, 109, 23);
 		panelA.add(rdbStem);
 
@@ -257,8 +260,8 @@ public class ClassificaForm extends JFrame {
 						}
 						htmltip = htmltip + tip.substring(beginIndex, endIndex) + "<br>";
 					}
+					htmltip = htmltip + "<br>"+ selecionaExplicacaoTEC(rowIndex);
 					htmltip = htmltip + "</html>";
-
 				} catch (RuntimeException e1) {
 					//e1.printStackTrace();
 					//catch null pointer exception if mouse is over an empty line
@@ -268,12 +271,6 @@ public class ClassificaForm extends JFrame {
 				return htmltip;
 			}
 		};
-		tblSugestoes.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				selecionaExplicacaoTEC();
-			}
-		});
 		tblSugestoes.setModel(new ModelSugestoes());
 		tblSugestoes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblSugestoes.getColumnModel().getColumn(0).setPreferredWidth(20);
@@ -406,6 +403,9 @@ public class ClassificaForm extends JFrame {
 				scrollPane_1.setSize(contentPane.getWidth()-12, contentPane.getHeight()-140);
 			}
 		});
+		MySelectionListener listener = new MySelectionListener();
+		tblSugestoes.getSelectionModel().addListSelectionListener(listener);
+
 		/////////////////////////////////////
 		///InicializaListasTEC....
 		//////////////////////////////////////////////////////
@@ -580,22 +580,35 @@ public class ClassificaForm extends JFrame {
 		frm.setVetorizador(vetorizador);
 		frm.setVisible(true);
 	}
-	protected void selecionaExplicacaoTEC() {
-		int index = tblSugestoes.getSelectedRow();
+	
+	protected String selecionaExplicacaoTEC(Integer pindex ) {
+		if (pindex==0){
+			pindex = tblSugestoes.getSelectedRow();
+		}
+		String explicacao = "";
 		ModelSugestoes model = (ModelSugestoes) tblSugestoes.getModel();
-		if (index > 0){
-			String codigo = model.getValueAt(index, 1);
+		if (pindex >= 0){
+			String codigo = model.getValueAt(pindex, 1);
 			codigo = codigo.substring(0, 11);
 			ArrayList<String[]> lista = vetorizador.getTECsPontosDescricao();
 			for (String[] linha:lista){
 				//System.out.println(linha[1]+':'+codigo);
 				if(codigo.equals(linha[1])){
-					txtExplicacao.append(linha[0]);
+					explicacao = "Linha: "+codigo+ " -- "+ linha[0]+"\n";
+					txtExplicacao.append(explicacao);
 					break;
 				}
 			}
 		}
+		return explicacao;
 
+	}
+	
+	private class MySelectionListener implements  ListSelectionListener {
+		@Override
+		public void valueChanged(ListSelectionEvent e) {
+			selecionaExplicacaoTEC(0);
+		}
 	}
 
 }
