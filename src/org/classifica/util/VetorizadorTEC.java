@@ -18,9 +18,12 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.classifica.entidades.Capitulo;
-import org.classifica.entidades.Dicionario;
-import org.classifica.gui.ClassificaForm;
+
+
 
 
 
@@ -113,7 +116,7 @@ public class VetorizadorTEC {
 
 	private short[] vetorVocabBigramacountdocs;
 
-	private ArrayList<Dicionario> dicionario;
+	private TreeMap<String, Integer> dicionario;
 
 	public ArrayList<Capitulo> getListaCapitulos() {
 		return listaCapitulos;
@@ -137,7 +140,7 @@ public class VetorizadorTEC {
 		Tipo[] tipos = {Tipo.TEXTO};
 		setTiposAtivos(tipos);
 		File dir = new File(caminho);
-		File fdelta = new File(caminho+"delta");
+		File fdelta = new File(caminho+"_delta");
 		if (!fdelta.exists()){ // Salva valores padrão dos parâmetros
 			if(!dir.exists()) dir.mkdir();
 			setK(_k);
@@ -816,9 +819,12 @@ public class VetorizadorTEC {
 					}
 				} else { // Procura palavras também no dicionário. Se houver, adiciona termo equilavente no indiceVocab
 					if (is_dicionarizado()){
-						index = dicionario.indexOf(palavra);
-						if (index!=-1){
+						index = dicionario.get(palavra);
+						if (index!=null){
+							//Dicionario dict = dicionario.get(index); 
+							//indicesVocab.add(dict.getIndicevocab());
 							indicesVocab.add(index);
+							System.out.println(palavra);
 							textopontuado = textopontuado + palavra +". Total de ocorrências: "+ Integer.toString(vetorVocab[index])+"\n";
 						}
 					}
@@ -997,35 +1003,43 @@ public class VetorizadorTEC {
 		return getEstatisticas()+textopontuado;
 	}
 	public void normalizar() {
-		float razao = TECsPontos.get(0)[0];
-		for (int r=0;r<TECsPontos.size();r++){
-			Float[] posicao =TECsPontos.get(r);
-			posicao[0] = posicao[0]/razao; 
-			TECsPontos.set(r, posicao);
+		if (TECsPontos.size() > 0){
+			float razao = TECsPontos.get(0)[0];
+			for (int r=0;r<TECsPontos.size();r++){
+				Float[] posicao =TECsPontos.get(r);
+				posicao[0] = posicao[0]/razao; 
+				TECsPontos.set(r, posicao);
+			}
 		}
-		razao = TECsPontosPosicao.get(0)[0];
-		for (int r=0;r<TECsPontosPosicao.size();r++){
-			Float[] posicao =TECsPontosPosicao.get(r);
-			posicao[0] = posicao[0]/razao; 
-			TECsPontosPosicao.set(r, posicao);
+		if (TECsPontosPosicao.size() > 0){
+			float razao = TECsPontosPosicao.get(0)[0];
+			for (int r=0;r<TECsPontosPosicao.size();r++){
+				Float[] posicao =TECsPontosPosicao.get(r);
+				posicao[0] = posicao[0]/razao; 
+				TECsPontosPosicao.set(r, posicao);
+			}
 		}
 	}
-    /*####################################################################################
+	/*####################################################################################
 	Dicionário de sinônimos utilizado: http://www.nilc.icmc.usp.br/tep2/
 	O uso e redistribuição deste dicionário DEVE seguir os termos de licenciamento dos autores originais
 	Este método procura palavras do vocabulário TEC no dicionário e, somente no caso desta palavra estar no dicionário, adiciona seus sinônimos ao dicionário
 	Depois, caso a pessoa busque por uma palavra que não está no vocabulário TEC mas cujo sinônimo está no dicionário, o dicionário pode substituí-la pela palavra que está   
-	*/
+	 */
 	@SuppressWarnings("unchecked")
 	private void montaDicionario(){ 
-		dicionario = (ArrayList<Dicionario>) deSerialize(caminho+"listadicionario");
+		dicionario = (TreeMap<String, Integer>) deSerialize(caminho+"listadicionario");
 		if ((dicionario==null)){
-			dicionario = new ArrayList<Dicionario>();
+			SortedMap<String, Integer> vocabordenado = new TreeMap<String, Integer>();
+			for (Integer r=0;r<vocab.size();r++){
+				vocabordenado.put(vocab.get(r), r);
+			}
+			dicionario = new TreeMap<String, Integer>();
 			InputStream is = VetorizadorTEC.class.getResourceAsStream("/org/classifica/resources/base_tep2.txt");
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			ArrayList<String> listaTEP2 = new ArrayList<String>();
 			try {
 				String linhaTEP2 = br.readLine();
+				//int cont=0;
 				while (linhaTEP2!=null){
 					int inicio = linhaTEP2.indexOf("{");
 					int fim = linhaTEP2.indexOf("}");
@@ -1034,16 +1048,29 @@ public class VetorizadorTEC {
 					}
 					String[] palavras = linhaTEP2.split(", ");
 					for (String palavra:palavras){
-						int i = vocab.indexOf(palavra);
-						if (i!=-1){
-							Dicionario dict = new Dicionario();
-							dict.setIndicevocab(i);
-							dict.setPalavra(palavra);
-							dicionario.add(dict);
+						palavra = removerAcentos(palavra);
+						palavra = palavra.toUpperCase();
+						Integer i = vocabordenado.get(palavra);
+						if (i!=null){
+							//System.out.println(palavra);
+							String sinonimos = ""; 
+							for (String sinonimo:palavras){
+								sinonimo = removerAcentos(sinonimo);
+								sinonimo = sinonimo.toUpperCase();
+								/*Dicionario dict = new Dicionario();
+								dict.setIndicevocab(i);
+								dict.setPalavra(sinonimo);*/
+								dicionario.put(sinonimo, i);
+								sinonimos = sinonimos + sinonimo+" ";
+							}
+							System.out.println(sinonimos);
 						}
 					}
-					listaTEP2.add(linhaTEP2);
-					listaTEP2.add(linhaTEP2);
+					linhaTEP2 = br.readLine();
+					/*cont++;
+					if ((cont % 1000) == 0){
+						System.out.println(cont+" linhas...");
+					}*/
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -1156,7 +1183,7 @@ public class VetorizadorTEC {
 		serialize(_dicionarizado, caminho+"_dicionarizado");
 	}
 
-	
+
 	public void serialize(Object pobject, String filename) {
 		try{
 			FileOutputStream fos= new FileOutputStream(filename);
@@ -1183,7 +1210,7 @@ public class VetorizadorTEC {
 			return result;
 		}
 	}
-/*
+	/*
 		private <T> Object deSerialize(Class<T> tipo, String filename) {
 			Object result = null;
 			return result;
@@ -1299,7 +1326,7 @@ public class VetorizadorTEC {
 	private ArrayList<String> deSerializeArrayListString(String filename) {
 		return (ArrayList<String>) deSerialize(filename);
 	}
-*/
+	 */
 
 
 }

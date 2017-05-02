@@ -547,7 +547,7 @@ public class ClassificaForm extends JFrame {
 		/////////////////////////////////////
 		///InicializaListasTEC....
 		//////////////////////////////////////////////////////
-		carregaTECCompleta();
+		//carregaTECCompleta();
 
 		ClassificaSwingWorker sw = new ClassificaSwingWorker();
 		sw.execute();
