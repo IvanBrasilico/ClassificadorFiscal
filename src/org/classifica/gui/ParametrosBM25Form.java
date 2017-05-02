@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.JSpinner;
 import javax.swing.JLabel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.JCheckBox;
 
 public class ParametrosBM25Form extends JFrame {
 
@@ -19,13 +20,15 @@ public class ParametrosBM25Form extends JFrame {
 	private JSpinner spinB;
 	private JSpinner spinD;
 	private VetorizadorTEC vetorizador;
+	private JCheckBox chkNormalizar;
+	private JCheckBox chkDicionario;
 
 	public ParametrosBM25Form() {
-		setBounds(100, 100, 480, 311);
+		setBounds(100, 100, 525, 426);
 		getContentPane().setLayout(null);
 		{
 			JPanel buttonPane = new JPanel();
-			buttonPane.setBounds(0, 229, 387, 33);
+			buttonPane.setBounds(10, 344, 387, 33);
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane);
 			{
@@ -35,9 +38,11 @@ public class ParametrosBM25Form extends JFrame {
 						Integer k = (Integer) spinK.getValue(); 
 						Integer b = (Integer) spinB.getValue(); 
 						Integer d = (Integer) spinD.getValue(); 
-						vetorizador._k = k / 10.0;
-						vetorizador._b = b / 100.0;
-						vetorizador._delta = d / 10.0;
+						vetorizador.setK(k / 10.0);
+						vetorizador.setB(b / 100.0);
+						vetorizador.setDelta(d / 10.0);
+						vetorizador.setNormalizado(chkNormalizar.isSelected());
+						vetorizador.set_dicionarizado(chkDicionario.isSelected());
 						dispose();
 					}
 				});
@@ -105,15 +110,34 @@ public class ParametrosBM25Form extends JFrame {
 		JLabel lblNewLabel_4 = new JLabel("%");
 		lblNewLabel_4.setBounds(285, 85, 46, 14);
 		getContentPane().add(lblNewLabel_4);
+		
+		chkNormalizar = new JCheckBox("Normalizar resultados");
+		chkNormalizar.setSelected(true);
+		chkNormalizar.setBounds(30, 220, 266, 23);
+		getContentPane().add(chkNormalizar);
+		
+		JLabel lblNewLabel_5 = new JLabel("Divide todas as pontua\u00E7\u00F5es da lista pela maior pontua\u00E7\u00E3o");
+		lblNewLabel_5.setBounds(34, 245, 439, 14);
+		getContentPane().add(lblNewLabel_5);
+		
+		chkDicionario = new JCheckBox("Busca dicionarizada/expans\u00E3o da busca");
+		chkDicionario.setBounds(33, 274, 263, 23);
+		getContentPane().add(chkDicionario);
+		
+		JLabel lblNewLabel_6 = new JLabel("Expande os termos da busca com palavras similares no vocabul\u00E1rio e dicion\u00E1rio TEP2");
+		lblNewLabel_6.setBounds(33, 304, 440, 14);
+		getContentPane().add(lblNewLabel_6);
 	}
 
 	public void setVetorizador(VetorizadorTEC vetorizador) {
 		this.vetorizador = vetorizador;
-		Integer k = (int) (vetorizador._k*10); 
-		Integer b = (int) (vetorizador._b*100); 
-		Integer d = (int) (vetorizador._delta*10); 
+		Integer k = (int) (vetorizador.get_k()*10); 
+		Integer b = (int) (vetorizador.get_b()*100); 
+		Integer d = (int) (vetorizador.get_delta()*10); 
 		spinK.setValue(k);
 		spinB.setValue(b);
 		spinD.setValue(d);
+		chkNormalizar.setSelected(vetorizador.is_normalizado());
+		chkDicionario.setSelected(vetorizador.is_dicionarizado());
 	}
 }
