@@ -4,6 +4,8 @@ Nome do criador: Ivan da Silva Brasílico
 
 Sistema de auxílio em Classificação Fiscal
 
+https://medium.com/@brasilico.ivan/utiliza%C3%A7%C3%A3o-das-t%C3%A9cnicas-de-recupera%C3%A7%C3%A3o-e-ranqueamento-de-texto-e-t%C3%A9cnicas-de-ia-para-aux%C3%ADlio-25d047d4fe06
+
 Este sistema utiliza técnicas de busca e processamento em textos para fazer uma pontuação probabilística.
 
 O sistema roda totalmente embutido, podendo ser usado totalmente sem acesso à redes, em quaisquer computadores que possuam o Java instalado.
