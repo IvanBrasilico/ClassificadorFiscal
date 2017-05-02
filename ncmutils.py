@@ -241,6 +241,7 @@ def Visualiza():
 
     teste = "T"
     while (teste!=""):
+<<<<<<< HEAD
         teste = input("Digite umas palavras-descrição de produto para ver suas ocorrências. Digite simplemente Enter para encerrar:")
         matrizPontos, explica = pontuaVetores(teste, vocab, vetoresTEC, vetorVocab)
         print(explica)
@@ -261,6 +262,20 @@ def Visualiza():
                 if(codigo2==codigo):
                     print(linha)
 
+=======
+        teste = input("Digite umas palavras-descrição de produto. Digite simplemente Enter para encerrar:")
+        matrizPontos, explica = pontuaVetores(teste, vocab, vetoresTEC, vetorVocab)
+        print(explica)
+        ind = 5
+        if (ind > matrizPontos.shape[1]):
+            ind = matrizPontos.shape[1]
+        print("5 mais:")
+        for codigo in (matrizPontos[0, :ind]):
+            for linha in (listaTECResumo):
+                codigo2 = linha[:10]
+                if(codigo2==codigo):
+                    print(linha)
+>>>>>>> branch 'master' of https://github.com/IvanBrasilico/ClassificadorFiscal.git
 
     
     
