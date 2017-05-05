@@ -711,8 +711,9 @@ public class ClassificaForm extends JFrame {
 			modeln.addElement( capitulo );
 		}   
 		cbbCapNCM.addItemListener(new MyCapChangeListener());
+		InputStream ins = ClassificaForm.class.getResourceAsStream("/org/classifica/resources/listadepaises.txt");
 		@SuppressWarnings("unchecked")
-		List<Pais> paises = (List<Pais>) vetorizador.deSerialize(vetorizador.caminho+"listadepaises");
+		List<Pais> paises = (List<Pais>) vetorizador.deSerialize(ins);
 		DefaultComboBoxModel<Pais> modelr = (DefaultComboBoxModel<Pais>) cbbPaisOrigemCapNCM.getModel();
 		modelr.addElement(null);
 		/*DataAccess dataaccess = DataAccess.getDB();

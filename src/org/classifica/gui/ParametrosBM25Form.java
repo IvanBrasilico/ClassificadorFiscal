@@ -22,13 +22,14 @@ public class ParametrosBM25Form extends JFrame {
 	private VetorizadorTEC vetorizador;
 	private JCheckBox chkNormalizar;
 	private JCheckBox chkDicionario;
+	private JCheckBox chkUsarCapitulo;
 
 	public ParametrosBM25Form() {
-		setBounds(100, 100, 525, 426);
+		setBounds(100, 100, 565, 529);
 		getContentPane().setLayout(null);
 		{
 			JPanel buttonPane = new JPanel();
-			buttonPane.setBounds(10, 344, 387, 33);
+			buttonPane.setBounds(10, 447, 387, 33);
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane);
 			{
@@ -43,6 +44,7 @@ public class ParametrosBM25Form extends JFrame {
 						vetorizador.setDelta(d / 10.0);
 						vetorizador.setNormalizado(chkNormalizar.isSelected());
 						vetorizador.set_dicionarizado(chkDicionario.isSelected());
+						vetorizador.set_usarcapitulo(chkUsarCapitulo.isSelected());
 						dispose();
 					}
 				});
@@ -127,6 +129,19 @@ public class ParametrosBM25Form extends JFrame {
 		JLabel lblNewLabel_6 = new JLabel("Expande os termos da busca com palavras similares no vocabul\u00E1rio e dicion\u00E1rio TEP2");
 		lblNewLabel_6.setBounds(33, 304, 440, 14);
 		getContentPane().add(lblNewLabel_6);
+		
+		JLabel lblAnexaADescrio = new JLabel("Anexa a descri\u00E7\u00E3o do cap\u00EDtulo no ranqueamento das posi\u00E7\u00F5es e dos subitens");
+		lblAnexaADescrio.setBounds(33, 359, 440, 14);
+		getContentPane().add(lblAnexaADescrio);
+		
+		chkUsarCapitulo = new JCheckBox("Usar descri\u00E7\u00E3o do Cap\u00EDtulo");
+		chkUsarCapitulo.setSelected(true);
+		chkUsarCapitulo.setBounds(33, 329, 263, 23);
+		getContentPane().add(chkUsarCapitulo);
+		
+		JLabel lblaMudanaEfetiva = new JLabel("(P/ aplicar mudan\u00E7a apagar o diret\u00F3rio vetorizador e reiniciar sistema p/ remontagem das listas)");
+		lblaMudanaEfetiva.setBounds(33, 379, 506, 14);
+		getContentPane().add(lblaMudanaEfetiva);
 	}
 
 	public void setVetorizador(VetorizadorTEC vetorizador) {
@@ -139,5 +154,6 @@ public class ParametrosBM25Form extends JFrame {
 		spinD.setValue(d);
 		chkNormalizar.setSelected(vetorizador.is_normalizado());
 		chkDicionario.setSelected(vetorizador.is_dicionarizado());
+		chkUsarCapitulo.setSelected(vetorizador.is_usarcapitulo());
 	}
 }

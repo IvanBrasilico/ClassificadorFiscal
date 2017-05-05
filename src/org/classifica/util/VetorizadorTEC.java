@@ -66,6 +66,7 @@ public class VetorizadorTEC {
 	private double _b = 0.6;
 	private boolean _normalizado = true;
 	private boolean _dicionarizado = false;
+	private boolean _usarcapitulo = true;
 	public double get_delta() {
 		return _delta;
 	}
@@ -116,7 +117,8 @@ public class VetorizadorTEC {
 
 	private short[] vetorVocabBigramacountdocs;
 
-	private TreeMap<String, Integer> dicionario;
+	private TreeMap<String, Integer> listadicionario; // Lista de índice inverso - palavra do dicionário X índice do vocabulário
+	private TreeMap<Integer, Integer[]> listadesinonimos; // Caso haja sinônimos dentro da TEC, lista dos vocabulários da TEC que estão na linha de sinônimos da base TEP2
 
 	public ArrayList<Capitulo> getListaCapitulos() {
 		return listaCapitulos;
@@ -148,12 +150,14 @@ public class VetorizadorTEC {
 			setDelta(_delta);
 			setNormalizado(_normalizado);
 			set_dicionarizado(_dicionarizado);
+			set_usarcapitulo(_usarcapitulo);
 		} else { // Lê valores dos parâmetros
 			_delta = (double) deSerialize(caminho+"_delta");
 			_k = (double) deSerialize(caminho+"_k");
 			_b = (double) deSerialize(caminho+"_b");
 			_normalizado = (boolean) deSerialize(caminho+"_normalizado");
 			_dicionarizado = (boolean) deSerialize(caminho+"_dicionarizado");
+			_usarcapitulo =  (boolean) deSerialize(caminho+"_usarcapitulo");
 		}
 	}
 
@@ -220,23 +224,28 @@ public class VetorizadorTEC {
 				capitulo.setNome(linha);
 				String descricao="";
 				r++;
-				linha = listaTECCompleta[r];
-				while (linha.indexOf("Nota")==-1){
-					descricao = descricao + linha + " ";
-					r++;
+				if (linha.indexOf("77")==-1){ // Capítulo 77 hoje é uma exceção (vazio), se for, não entra aqui
 					linha = listaTECCompleta[r];
+					while ((linha.indexOf("Nota")==-1) && linha.indexOf("NCM")!=0){ //NCM para se o Capítulo não tiver notas...
+						descricao = descricao + linha + " ";
+						r++;
+						linha = listaTECCompleta[r];
+					}
+					capitulo.setDescricao(descricao);
+					String notas="";
+					if (!(linha.indexOf("Nota")==-1)){
+						r++;
+						linha = listaTECCompleta[r];
+						while (linha.indexOf("______")==-1){
+							notas = notas + linha +"\n";
+							r++;
+							linha = listaTECCompleta[r];
+						}
+					}
+					capitulo.setNotas(notas);
 				}
-				capitulo.setDescricao(descricao);
-				String notas="";
-				r++;
-				linha = listaTECCompleta[r];
-				while (linha.indexOf("______")==-1){
-					notas = notas + linha +"\n";
-					r++;
-					linha = listaTECCompleta[r];
-				}
-				capitulo.setNotas(notas);
 				listaCapitulos.add(capitulo);
+				//System.out.println(capitulo.getNome()+capitulo.getDescricao());
 			}
 		}
 		for (int r=0;r<listaTECCompleta.length;r++){
@@ -270,6 +279,16 @@ public class VetorizadorTEC {
 			String descricao = listaNCM.get(r)[1];
 			String II = listaNCM.get(r)[2];
 			if (!II.isEmpty()){ // É uma Classificação válida, buscar os "pais"
+				//Busca a descrição do capítulo para começar
+				String descricaocapitulo = "";
+				if (is_usarcapitulo()){
+					try{
+						int capitulo = Integer.parseInt(codigo.substring(0, 2)) - 1;
+						descricaocapitulo = listaCapitulos.get(capitulo).getDescricao();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 				int s = r-1; 
 				while (true){
 					String codigo2 = listaNCM.get(s)[0];
@@ -277,9 +296,9 @@ public class VetorizadorTEC {
 					String lcodigo = "";
 					lcodigo=codigo.substring(0, 2)+"."+codigo.substring(2, 4);
 					//					lcodigo=codigo.substring(0, 4);
-					if(lcodigo.compareTo(codigo2)==0){
+					if(lcodigo.compareTo(codigo2)==0){ // Chegou na posição
 						descricao=descricao+" "+descricao2;
-						listaTECResumo.add(codigo+" "+descricao);
+						listaTECResumo.add(codigo+" "+descricao+" "+descricaocapitulo);
 						break;
 					}
 					try{
@@ -300,7 +319,7 @@ public class VetorizadorTEC {
 					}
 					s--;
 					if ((s==0) || ((r-s) > 100)){ // Exceção encontrada, abortar
-						listaTECResumo.add(codigo+" "+descricao);
+						listaTECResumo.add(codigo+" "+descricao+" "+descricaocapitulo);
 						break;
 					}
 				}
@@ -314,17 +333,34 @@ public class VetorizadorTEC {
 			String codigo = listaNCM.get(r)[0];
 			String descricao = listaNCM.get(r)[1];
 			if (codigo.indexOf('.')==2){ // É uma posição, buscar os filhos
+				String descricaocapitulo = "";
+				if (is_usarcapitulo()){
+					try{
+						int capitulo = Integer.parseInt(codigo.substring(0, 2)) - 1;
+						descricaocapitulo = listaCapitulos.get(capitulo).getDescricao();
+						//System.out.println(descricaocapitulo);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 				while (true){
-					r = r+ 1; 
+					r = r + 1; 
 					String codigo2 = listaNCM.get(r)[0];
 					String descricao2 = listaNCM.get(r)[1];
 					String lcodigo = "";
 					lcodigo=codigo2.substring(0, 2)+"."+codigo2.substring(2, 4);
+					//if (codigo.indexOf("34")!=-1){
+					//System.out.println(lcodigo+":::"+codigo);
+					//}
 					if(lcodigo.compareTo(codigo)==0){
 						descricao=descricao+" "+descricao2;
 					} else {
-						listaTECResumoPosicoes.add(codigo+" "+descricao);
+						listaTECResumoPosicoes.add(codigo+" "+descricao+" "+descricaocapitulo);
 						//						System.out.println("While..."+codigo+" "+descricao);
+						//if (codigo.indexOf("34")!=-1){
+						//System.out.println(codigo+" "+descricao+" "+descricaocapitulo);
+						//}
+						r = r - 1;
 						break;
 					}
 				}
@@ -811,24 +847,34 @@ public class VetorizadorTEC {
 			stemmer.setCurrent(palavra);
 			if (tiposAtivos.contains(Tipo.TEXTO)){
 				palavra=palavra.toUpperCase();
+				if (is_dicionarizado()){ // Procura palavras também no dicionário. Se houver, adiciona termo equilavente no indiceVocab
+					index = listadicionario.get(palavra);
+					if (index!=null){
+						String dsinonimos = "";
+						String docorrencias = "";
+						Integer[] sinonimos = listadesinonimos.get(index);
+						if (sinonimos!=null){
+							for (Integer ind:sinonimos){
+								indicesVocab.add(ind);
+								dsinonimos = dsinonimos+";"+vocab.get(ind);
+								docorrencias = docorrencias +";"+ Integer.toString(vetorVocab[ind]);
+							}
+						} else {
+							indicesVocab.add(index);
+							dsinonimos = vocab.get(index);
+							docorrencias = Integer.toString(vetorVocab[index]);
+						}
+						System.out.println(palavra);
+						textopontuado = textopontuado + palavra + "->" +dsinonimos+". Total de ocorrências: "+ docorrencias+"\n";
+					}
+				}
 				index = vocab.indexOf(palavra);
 				if (index >=0){
 					if (indicesVocab.indexOf(index) == -1){
 						indicesVocab.add(index);
 						textopontuado = textopontuado + palavra +". Total de ocorrências: "+ Integer.toString(vetorVocab[index])+"\n";
 					}
-				} else { // Procura palavras também no dicionário. Se houver, adiciona termo equilavente no indiceVocab
-					if (is_dicionarizado()){
-						index = dicionario.get(palavra);
-						if (index!=null){
-							//Dicionario dict = dicionario.get(index); 
-							//indicesVocab.add(dict.getIndicevocab());
-							indicesVocab.add(index);
-							System.out.println(palavra);
-							textopontuado = textopontuado + palavra +". Total de ocorrências: "+ Integer.toString(vetorVocab[index])+"\n";
-						}
-					}
-				}
+				} 
 			}
 			if (tiposAtivos.contains(Tipo.STEM)) {
 				stemmer.stem();
@@ -1028,13 +1074,15 @@ public class VetorizadorTEC {
 	 */
 	@SuppressWarnings("unchecked")
 	private void montaDicionario(){ 
-		dicionario = (TreeMap<String, Integer>) deSerialize(caminho+"listadicionario");
-		if ((dicionario==null)){
+		listadicionario = (TreeMap<String, Integer>) deSerialize(caminho+"listadicionario");
+		listadesinonimos = (TreeMap<Integer, Integer[]>) deSerialize(caminho+"listadesinonimos");
+		if ((listadicionario==null)){
 			SortedMap<String, Integer> vocabordenado = new TreeMap<String, Integer>();
 			for (Integer r=0;r<vocab.size();r++){
 				vocabordenado.put(vocab.get(r), r);
 			}
-			dicionario = new TreeMap<String, Integer>();
+			listadicionario = new TreeMap<String, Integer>();
+			listadesinonimos = new TreeMap<Integer, Integer[]>();
 			InputStream is = VetorizadorTEC.class.getResourceAsStream("/org/classifica/resources/base_tep2.txt");
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
 			try {
@@ -1047,24 +1095,30 @@ public class VetorizadorTEC {
 						linhaTEP2 = linhaTEP2.substring(inicio+1, fim);
 					}
 					String[] palavras = linhaTEP2.split(", ");
+					ArrayList<Integer> sinonimos = new ArrayList<Integer>();  
 					for (String palavra:palavras){
 						palavra = removerAcentos(palavra);
 						palavra = palavra.toUpperCase();
 						Integer i = vocabordenado.get(palavra);
 						if (i!=null){
-							//System.out.println(palavra);
-							String sinonimos = ""; 
+							sinonimos.add(i);
 							for (String sinonimo:palavras){
 								sinonimo = removerAcentos(sinonimo);
 								sinonimo = sinonimo.toUpperCase();
-								/*Dicionario dict = new Dicionario();
-								dict.setIndicevocab(i);
-								dict.setPalavra(sinonimo);*/
-								dicionario.put(sinonimo, i);
-								sinonimos = sinonimos + sinonimo+" ";
+								listadicionario.put(sinonimo, i);
 							}
-							System.out.println(sinonimos);
 						}
+					}
+					if (sinonimos.size() > 1) { //
+						int len = sinonimos.size();
+						Integer[] sinonimosarray = new Integer[len];
+						for(Integer x=0; x < len; x++)
+							sinonimosarray[x] = sinonimos.get(x);
+						System.out.println("Sinônimos encontrados:");
+						for (Integer ind:sinonimos){
+							System.out.println(vocab.get(ind));
+						}
+						listadesinonimos.put(sinonimosarray[0], sinonimosarray);
 					}
 					linhaTEP2 = br.readLine();
 					/*cont++;
@@ -1075,7 +1129,8 @@ public class VetorizadorTEC {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			serialize(dicionario, caminho+"listadicionario");
+			serialize(listadicionario, caminho+"listadicionario");
+			serialize(listadesinonimos, caminho+"listadesinonimos");
 		}
 	}
 
@@ -1210,6 +1265,19 @@ public class VetorizadorTEC {
 			return result;
 		}
 	}
+	public Object deSerialize(InputStream is) {
+		Object result = null; 
+		try{
+			ObjectInputStream ois= new ObjectInputStream(is);
+			result = ois.readObject();
+			ois.close();
+			return result;
+		}catch(IOException | ClassNotFoundException ioe){
+			ioe.printStackTrace();
+			return result;
+		}
+	}
+
 	/*
 		private <T> Object deSerialize(Class<T> tipo, String filename) {
 			Object result = null;
@@ -1327,6 +1395,13 @@ public class VetorizadorTEC {
 		return (ArrayList<String>) deSerialize(filename);
 	}
 	 */
+	public boolean is_usarcapitulo() {
+		return _usarcapitulo;
+	}
+	public void set_usarcapitulo(boolean _usarcapitulo) {
+		this._usarcapitulo = _usarcapitulo;
+		serialize(_usarcapitulo, caminho+"_usarcapitulo");
+	}
 
 
 }
