@@ -55,6 +55,9 @@ public class VetorizadorTEC {
 	public void setTECsPontosDescricao(ArrayList<String[]> tECsPontosDescricao) {
 		TECsPontosDescricao = tECsPontosDescricao;
 	}
+	public ArrayList<String[]> getTECsPontosDescricaoPosicao() {
+		return TECsPontosDescricaoPosicao;
+	}
 	public enum Tipo {TEXTO, STEM, BIGRAMA};
 	private Set<Tipo> tiposAtivos;
 	private ArrayList<ArrayList<Integer>> vetoresTECstemindex;
@@ -515,9 +518,9 @@ public class VetorizadorTEC {
 				String linha = listaTECResumo.get(r);
 				linha = removerAcentos(linha);
 				listadepalavras = linha.split(" ");
-				int flagBigramacontou = 0; 
-				int flagstemcontou = 0; 
-				int flagcontou = 0; 
+				ArrayList<Integer> vocabLinhacountUnico = new ArrayList<Integer>(); 
+				ArrayList<Integer> vocabBigramaLinhacountUnico = new ArrayList<Integer>(); 
+				ArrayList<Integer> vocabStemLinhacountUnico = new ArrayList<Integer>(); 
 				for (int s=0;s<listadepalavras.length;s++){
 					String palavra = listadepalavras[s];
 					if(s>0){
@@ -526,10 +529,7 @@ public class VetorizadorTEC {
 						index = vocabBigrama.indexOf(bigrama); 
 						if (index >=0){
 							vetorVocabBigrama[index] = (short) (vetorVocabBigrama[index] + 1);
-							if (flagBigramacontou==0){
-								vetorVocabBigramacountdocs[index] = (short) (vetorVocabBigramacountdocs[index] + 1);
-								flagBigramacontou=1;
-							}
+							vocabBigramaLinhacountUnico.add(index);
 						}
 					}
 					stemmer.setCurrent(palavra);
@@ -537,10 +537,7 @@ public class VetorizadorTEC {
 					index = vocab.indexOf(palavra); 
 					if (index >=0){
 						vetorVocab[index] = (short) (vetorVocab[index] + 1);
-						if (flagcontou==0){
-							vetorVocabcountdocs[index] = (short) (vetorVocabcountdocs[index] + 1);
-							flagcontou=1;
-						}
+						vocabLinhacountUnico.add(index);
 					}
 					stemmer.stem();
 					palavra = stemmer.getCurrent();
@@ -548,14 +545,22 @@ public class VetorizadorTEC {
 					index = vocabstem.indexOf(palavra); 
 					if (index >=0){
 						vetorVocabstem[index] = (short) (vetorVocabstem[index] + 1);
-						if (flagstemcontou==0){
-							vetorVocabstemcountdocs[index] = (short) (vetorVocabstemcountdocs[index] + 1);
-							flagstemcontou=1;
-						}
-
+						vocabStemLinhacountUnico.add(index);
 					}
+				}//for s (linha)
+				vocabBigramaLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabBigramaLinhacountUnico));//Elimina duplicados
+				vocabLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabLinhacountUnico));//Elimina duplicados
+				vocabStemLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabStemLinhacountUnico));//Elimina duplicados
+				for (Integer i:vocabBigramaLinhacountUnico){
+					vetorVocabBigramacountdocs[i] = (short) (vetorVocabBigramacountdocs[i] + 1);
 				}
-			}
+				for (Integer i:vocabStemLinhacountUnico){
+					vetorVocabstemcountdocs[i] = (short) (vetorVocabstemcountdocs[i]+ 1);
+				}
+				for (Integer i:vocabLinhacountUnico){
+					vetorVocabcountdocs[i] = (short) (vetorVocabcountdocs[i] + 1);
+				}
+			}//for r (lista)
 			serializeVetorShort(vetorVocab, caminho+"vetorVocab");
 			serializeVetorShort(vetorVocabstem, caminho+"vetorVocabstem");
 			serializeVetorShort(vetorVocabBigrama, caminho+"vetorVocabBigrama");
@@ -670,9 +675,9 @@ public class VetorizadorTEC {
 				String linha = listaTECResumoPosicoes.get(r);
 				linha = removerAcentos(linha);
 				listadepalavras = linha.split(" ");
-				int flagBigramacontou = 0; 
-				int flagstemcontou = 0; 
-				int flagcontou = 0; 
+				ArrayList<Integer> vocabLinhacountUnico = new ArrayList<Integer>(); 
+				ArrayList<Integer> vocabBigramaLinhacountUnico = new ArrayList<Integer>(); 
+				ArrayList<Integer> vocabStemLinhacountUnico = new ArrayList<Integer>(); 
 				for (int s=0;s<listadepalavras.length;s++){
 					String palavra = listadepalavras[s];
 					if(s>0){
@@ -681,10 +686,7 @@ public class VetorizadorTEC {
 						index = vocabBigrama.indexOf(bigrama); 
 						if (index >=0){
 							vetorVocabBigramaPosicoes[index] = (short) (vetorVocabBigramaPosicoes[index] + 1);
-							if (flagBigramacontou==0){
-								vetorVocabBigramaPosicoescountdocs[index] = (short) (vetorVocabBigramaPosicoescountdocs[index] + 1);
-								flagBigramacontou=1;
-							}
+							vocabBigramaLinhacountUnico.add(index);
 						}
 					}
 					stemmer.setCurrent(palavra);
@@ -692,10 +694,7 @@ public class VetorizadorTEC {
 					index = vocab.indexOf(palavra); 
 					if (index >=0){
 						vetorVocabPosicoes[index] = (short) (vetorVocabPosicoes[index] + 1);
-						if (flagcontou==0){
-							vetorVocabPosicoescountdocs[index] = (short) (vetorVocabPosicoescountdocs[index] + 1);
-							flagcontou=1;
-						}
+						vocabLinhacountUnico.add(index);
 					}
 					stemmer.stem();
 					palavra = stemmer.getCurrent();
@@ -703,13 +702,22 @@ public class VetorizadorTEC {
 					index = vocabstem.indexOf(palavra); 
 					if (index >=0){
 						vetorVocabstemPosicoes[index] = (short) (vetorVocabstemPosicoes[index] + 1);
-						if (flagstemcontou==0){
-							vetorVocabstemPosicoescountdocs[index] = (short) (vetorVocabstemPosicoescountdocs[index] + 1);
-							flagstemcontou=1;
-						}
+						vocabStemLinhacountUnico.add(index);
 					}
+				}//for s (linha)
+				vocabBigramaLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabBigramaLinhacountUnico));//Elimina duplicados
+				vocabLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabLinhacountUnico));//Elimina duplicados
+				vocabStemLinhacountUnico = new ArrayList<Integer>(new HashSet<Integer>(vocabStemLinhacountUnico));//Elimina duplicados
+				for (Integer i:vocabBigramaLinhacountUnico){
+					vetorVocabBigramaPosicoescountdocs[i] = (short) (vetorVocabBigramaPosicoescountdocs[i] + 1);
 				}
-			}
+				for (Integer i:vocabStemLinhacountUnico){
+					vetorVocabstemPosicoescountdocs[i] = (short) (vetorVocabstemPosicoescountdocs[i]+ 1);
+				}
+				for (Integer i:vocabLinhacountUnico){
+					vetorVocabPosicoescountdocs[i] = (short) (vetorVocabPosicoescountdocs[i] + 1);
+				}
+			}//for r (lista)
 			serializeVetorShort(vetorVocabPosicoes, caminho+"vetorVocabPosicoes");
 			serializeVetorShort(vetorVocabstemPosicoes, caminho+"vetorVocabstemPosicoes");
 			serializeVetorShort(vetorVocabBigramaPosicoes, caminho+"vetorVocabBigramaPosicoes");
@@ -803,13 +811,28 @@ public class VetorizadorTEC {
 	}
 
 
-	public double TF_IDF(Double countPalavraItemTEC, short psum, Integer pquantidadeTECs, short countPalavraVocab,
-			Integer pnumeroPalavrasLinhaTEC, double pavgLengthlistaTECResumo) {
+	public double TF_IDF(Double countPalavraItemTEC, Integer pquantidadeTECs, short countPalavraVocab,
+			short pnumeroPalavrasLinhaTEC, double pavgLengthlistaTECResumo) {
 		/// Pontuação padrão BM25+
-		double tf =  countPalavraItemTEC/psum;
-		tf = ( tf * ( _k + 1 ) ) / (tf + (_k * ((1 - _b) + ( _b * (pnumeroPalavrasLinhaTEC / pavgLengthlistaTECResumo)))));
-		double idf = Math.log( (pquantidadeTECs - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5));
-		return idf * (tf + _delta);
+		double tf =  countPalavraItemTEC/pnumeroPalavrasLinhaTEC;
+		double tfp = ( tf * ( _k + 1 ) ) / (tf + (_k * ((1 - _b) + ( _b * (pnumeroPalavrasLinhaTEC / pavgLengthlistaTECResumo)))));
+		double idf = Math.log( ((pquantidadeTECs - countPalavraVocab + 0.5) / ( countPalavraVocab + 0.5))+1); // Adiciono 1 para evitar pontuações IDF negativas
+		if (countPalavraItemTEC>0){
+			//System.out.println("Contagem ocorrências da palavra no documento:"+countPalavraItemTEC);
+			//System.out.println("Total palavras do documento:"+pnumeroPalavrasLinhaTEC);
+			//System.out.println("Média de palavras dos documentos:"+pavgLengthlistaTECResumo);
+			//System.out.println("_k:"+_k);
+			//System.out.println("_b:"+_b);
+			//System.out.println("_delta:"+_delta);
+			//System.out.println("TF:"+tf);
+			//System.out.println("TFP:"+tfp);
+
+			//System.out.println("Quantidade de documentos:"+pquantidadeTECs);
+			//System.out.println("Quantidade de documentos contendo a palavra:"+countPalavraVocab);
+			//System.out.println("IDF:"+idf);
+		}
+
+		return idf * (tfp + _delta);
 	}
 
 	public String pontuaTexto(String ptexto) {
@@ -817,9 +840,24 @@ public class VetorizadorTEC {
 	}
 
 	public String pontuaTexto(String ptexto, boolean ponderado) {
-		portugueseStemmer stemmer = new portugueseStemmer(); 
-		ptexto = removerAcentos(ptexto);
+		portugueseStemmer stemmer = new portugueseStemmer();
 		String[] listadepalavras = ptexto.split(" ");
+		ArrayList<Integer> sinais = new ArrayList<Integer>();
+		for (int r=0;r<listadepalavras.length;r++){
+			String palavra = listadepalavras[r];
+			Integer sinal = ((palavra.indexOf("!")==0) ? -2 : 1);
+			palavra = removerAcentos(palavra);
+			palavra = palavra.toUpperCase().trim();
+			//System.out.println(palavra);
+
+			int index = vocab.indexOf(palavra);
+			if (index >=0){
+				sinais.add(sinal);
+			}
+		}
+		//System.out.println(sinais);
+		ptexto = removerAcentos(ptexto);
+		listadepalavras = ptexto.split(" ");
 		TECsPontos = new ArrayList<Float[]>();
 		TECsPontosDescricao = new ArrayList<String[]>();
 		TECsPontosPosicao = new ArrayList<Float[]>();
@@ -859,12 +897,15 @@ public class VetorizadorTEC {
 								dsinonimos = dsinonimos+";"+vocab.get(ind);
 								docorrencias = docorrencias +";"+ Integer.toString(vetorVocab[ind]);
 							}
+							for (int r=0; r<sinonimos.length-1;r++){//Aumenta a lista de sinais para corresponder às palavras do dicionário
+								sinais.add(s+1, sinais.get(s));
+							};
 						} else {
 							indicesVocab.add(index);
 							dsinonimos = vocab.get(index);
 							docorrencias = Integer.toString(vetorVocab[index]);
 						}
-						System.out.println(palavra);
+						//						System.out.println(palavra);
 						textopontuado = textopontuado + palavra + "->" +dsinonimos+". Total de ocorrências: "+ docorrencias+"\n";
 					}
 				}
@@ -937,8 +978,6 @@ public class VetorizadorTEC {
 				Float[] linha = {(float) 0.0,(float) 0.0};
 				String[] linhadescricao = {"", ""};
 				String linhaTEC = listaTEC.get(r);
-				String[] arrayLinhaTEC = linhaTEC.split(" ");  
-				Integer numeroPalavrasLinhaTEC = arrayLinhaTEC.length; 
 				String linhadescricaopontos = "";
 				if (tiposAtivos.contains(Tipo.TEXTO)){
 					for (int s=0;s<indicesVocab.size();s++){
@@ -948,16 +987,16 @@ public class VetorizadorTEC {
 							Double countPalavraItemTEC = (double) vetorLinhaTECcount.get(indexLinha);
 							Double valorPalavraItemTEC = (double) 0.0;
 							if(ponderado){
-								short sum = 0;
+								short numeroPalavrasLinhaTEC = 0;
 								for (Integer i : vetorLinhaTECcount)
-									sum += i;
-								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
+									numeroPalavrasLinhaTEC += i;
+								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
 							} else {
 								valorPalavraItemTEC = countPalavraItemTEC;
 							}
-							linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocab.get(indicesVocab.get(s)) + " Pontos:" + String.format("%.4f" , valorPalavraItemTEC);
+							linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocab.get(indicesVocab.get(s)) + " Pontos:" + String.format("%.4f" , sinais.get(s)*valorPalavraItemTEC);
 							// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
-							totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
+							totaltec = totaltec + sinais.get(s)*(valorPalavraItemTEC.floatValue() / tiposAtivos.size());
 						}
 					}
 				}
@@ -969,16 +1008,16 @@ public class VetorizadorTEC {
 							Double countPalavraItemTEC = (double) vetorLinhaTECstemcount.get(indexLinha);
 							Double valorPalavraItemTEC = (double) 0.0;
 							if(ponderado){
-								short sum = 0;
-								for (Integer i : vetorLinhaTECstemcount)
-									sum += i;
-								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
+								short numeroPalavrasLinhaTEC = 0;
+								for (Integer i : vetorLinhaTECcount)
+									numeroPalavrasLinhaTEC += i;
+								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
 							} else {
 								valorPalavraItemTEC = countPalavraItemTEC;
 							}
-							linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabstem.get(indicesVocabstem.get(s)) + " Pontos:" + String.format("%.4f" , valorPalavraItemTEC);
+							linhadescricaopontos = linhadescricaopontos + " Palavra:" + vocabstem.get(indicesVocabstem.get(s)) + " Pontos:" + String.format("%.4f" , sinais.get(s)*valorPalavraItemTEC);
 							// Dividir o valor pela quantidade de tipos de busca ativos para obter a média
-							totaltec = totaltec + valorPalavraItemTEC.floatValue() / tiposAtivos.size();
+							totaltec = totaltec +sinais.get(s)*( valorPalavraItemTEC.floatValue() / tiposAtivos.size());
 						}
 					}
 				}
@@ -990,10 +1029,10 @@ public class VetorizadorTEC {
 							Double countPalavraItemTEC = (double) vetorLinhaTECBigramacount.get(indexLinha);
 							Double valorPalavraItemTEC = (double) 0.0;
 							if(ponderado){
-								short sum = 0;
-								for (Integer i : vetorLinhaTECBigramacount)
-									sum += i;
-								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, sum, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
+								short numeroPalavrasLinhaTEC = 0;
+								for (Integer i : vetorLinhaTECcount)
+									numeroPalavrasLinhaTEC += i;
+								valorPalavraItemTEC = TF_IDF(countPalavraItemTEC, listaTEC.size(), countPalavraVocab, numeroPalavrasLinhaTEC, avgLengthlistaTEC);
 							} else {
 								valorPalavraItemTEC = countPalavraItemTEC;
 							}
@@ -1003,6 +1042,8 @@ public class VetorizadorTEC {
 						}
 					}
 				}
+				//System.out.println(linhaTEC);
+				//System.out.println(linhadescricaopontos);
 				if (totaltec>0){
 					linha[0] = totaltec; // Pontuação
 					linha[1] = (float) r; // Índice da linha da TEC
@@ -1114,9 +1155,9 @@ public class VetorizadorTEC {
 						Integer[] sinonimosarray = new Integer[len];
 						for(Integer x=0; x < len; x++)
 							sinonimosarray[x] = sinonimos.get(x);
-						System.out.println("Sinônimos encontrados:");
+						//System.out.println("Sinônimos encontrados:");
 						for (Integer ind:sinonimos){
-							System.out.println(vocab.get(ind));
+							//System.out.println(vocab.get(ind));
 						}
 						listadesinonimos.put(sinonimosarray[0], sinonimosarray);
 					}

@@ -317,12 +317,12 @@ public class ClassificaForm extends JFrame {
 				modelp.limpar();
 				modelp.addLista(linhasp);
 
-				TableRowSorter<ModelSugestoes> sorter = new TableRowSorter<ModelSugestoes>(model);
-				tblSugestoes.setRowSorter(sorter);
+				//TableRowSorter<ModelSugestoes> sorter = new TableRowSorter<ModelSugestoes>(model);
+				//tblSugestoes.setRowSorter(sorter);
 				//tblSugestoesp.setRowSorter(sorter);
-				List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-				sortKeys.add(new RowSorter.SortKey(0, SortOrder.DESCENDING));
-				sorter.setSortKeys(sortKeys);
+				//List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+				//sortKeys.add(new RowSorter.SortKey(0, SortOrder.DESCENDING));
+				//sorter.setSortKeys(sortKeys);
 			}
 		});
 
@@ -343,6 +343,7 @@ public class ClassificaForm extends JFrame {
 		tblSugestoes.getColumnModel().getColumn(1).setPreferredWidth(500);
 		tblSugestoes.getColumnModel().getColumn(1).setMinWidth(400);
 		tblSugestoes.setFillsViewportHeight(true);
+		tblSugestoes.setName("Sugestoes");
 		scrollPane_1.setViewportView(tblSugestoes);
 
 		//Tabela de ranqueamento - posições
@@ -445,7 +446,13 @@ public class ClassificaForm extends JFrame {
 		scrollPane_2_1 = new JScrollPane();
 		splitPane2.setRightComponent(scrollPane_2_1);
 
-		tblNCM = new JTable();
+		tblNCM = new JTable(){
+			private static final long serialVersionUID = 1L;
+			public String getToolTipText(MouseEvent e) {
+				return toolTipExplicacao(e, this);
+			}
+		};
+
 		tblNCM.setFillsViewportHeight(true);
 		scrollPane_2_1.setViewportView(tblNCM);
 		tblNCM.setModel(new ModelNCM());
@@ -720,10 +727,10 @@ public class ClassificaForm extends JFrame {
 		List<Pais> paises;
 		try {
 			paises = dataaccess.qetListaPaises();
-			*/
-			for ( Pais obj : paises ) {  
-				modelr.addElement( obj );
-			}   
+		 */
+		for ( Pais obj : paises ) {  
+			modelr.addElement( obj );
+		}   
 		/*} catch (SQLException e1) {
 			e1.printStackTrace();
 		}*/
@@ -736,16 +743,22 @@ public class ClassificaForm extends JFrame {
 		frm.setVisible(true);
 	}
 
-	protected String selecionaExplicacaoTEC(Integer pindex ) {
-		if (pindex==0){
-			pindex = tblSugestoes.getSelectedRow();
+	protected String selecionaExplicacaoTEC(Integer pindex, JTable t ) {
+		if (pindex<0){
+			pindex = t.getSelectedRow();
 		}
 		String explicacao = "";
-		ModelSugestoes model = (ModelSugestoes) tblSugestoes.getModel();
+		ModelSugestoes lmodelo = (ModelSugestoes) t.getModel();
 		if (pindex >= 0){
-			String codigo = model.getValueAt(pindex, 1);
-			codigo = codigo.substring(0, 11);
-			ArrayList<String[]> lista = vetorizador.getTECsPontosDescricao();
+			String codigo = lmodelo.getValueAt(pindex, 1);
+			ArrayList<String[]> lista = new ArrayList<String[]>();
+			if (t.getName()=="Sugestoes"){
+				codigo = codigo.substring(0, 11);
+				lista = vetorizador.getTECsPontosDescricao();
+			} else {
+				codigo = codigo.substring(0, 5);
+				lista = vetorizador.getTECsPontosDescricaoPosicao();
+			}
 			for (String[] linha:lista){
 				//System.out.println(linha[1]+':'+codigo);
 				if(codigo.equals(linha[1])){
@@ -756,13 +769,12 @@ public class ClassificaForm extends JFrame {
 			}
 		}
 		return explicacao;
-
 	}
 
 	private class MySelectionListener implements  ListSelectionListener {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			selecionaExplicacaoTEC(0);
+			//			selecionaExplicacaoTEC(0);
 		}
 	}
 
@@ -830,7 +842,9 @@ public class ClassificaForm extends JFrame {
 		int colIndex = t.columnAtPoint(p);
 		try {
 			tip = t.getValueAt(rowIndex, colIndex).toString();
-			tip = tip + "<br>" + selecionaExplicacaoTEC(rowIndex);
+			if (t.getModel().getClass() == ModelSugestoes.class) {
+				tip = tip + "<br>" + selecionaExplicacaoTEC(rowIndex, t);
+			}
 			int numRows = (tip.length() % 150) + 1;
 			for (int r=0; r<=numRows; r+=1){
 				int beginIndex = r * 150;
